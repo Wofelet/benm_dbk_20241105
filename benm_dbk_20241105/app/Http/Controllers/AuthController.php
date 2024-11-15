@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -36,5 +37,46 @@ class AuthController extends Controller
                 "msg"=>"Usuario creado satisfactoriamente",
                 "count"=>1
             ]);
+    }
+    public function login(Request $request){
+        if(Auth::attempt($request->only("email","password"))){
+            return response()->json([
+                "success"=> false,
+                "errors"=>[
+                    "code"=>401,
+                    "msg"=> "No se reconocen las credenciales"
+            ],
+            "data"=>"",
+            "count"=> 0
+        ],401);
+        }
+        $user = User::where("email", $request->email)->firstOnFail();
+        $token =$user->createToken("auth_tokeb")->plainTextToken;
+
+        return response()->json([
+            "success"=> true,
+                "errors"=>[
+                    "code"=>200,
+                    "msg"=> ""
+            ],
+            "data"=>[
+                "acess_token"=> $token,
+                "token_type" =>"Bearer"
+            ],
+            "msg"=>"Ha iniciado sesion correctamente",
+            "count"=> 1
+        ],200);
+    }
+
+    public function me(Request $request){
+        return response()->json([
+            "success"=> true,
+            "errors"=>[
+                "code"=> 200,
+                "msg"=> ""
+            ],
+            "data"=>$request->user(),
+            "count"=> 1
+        ],200);
     }
 }
